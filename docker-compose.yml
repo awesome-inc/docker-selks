@@ -1,0 +1,81 @@
+version: '3'
+
+volumes:
+  json-volume:    # suricata json input -> logstash
+  elastic-volume: # elasticsearch data
+  rules-volume:   # scirius rules
+
+services:
+
+  suricata:
+    image: stamus/suricata
+    volumes:
+      - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./suricata/config/ethtool.conf:/etc/supervisor/conf.d/ethtool.conf:ro
+      - rules-volume:/etc/suricata/rules:rw
+    # TODO
+    # cap_add:
+    #   - NET_ADMIN
+    #   - NET_RAW
+    # net: host
+    # TODO set your suricata iface here
+    environment:
+      - SURICATA_ARGS="$capture_option"
+
+  elasticsearch:
+    build:
+      context: ./elasticsearch
+    environment:
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+      # single-node, cf.:
+      # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run
+      transport.type: local
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elastic-volume:/usr/share/elasticsearch/data
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:5.5.0
+    links:
+      - elasticsearch
+    volumes:
+      - ./logstash/conf.d:/usr/share/logstash/pipeline:ro
+      - json-volume:/var/log/suricata:ro
+    hostname: suricata
+    environment:
+      - XPACK_MONITORING_ENABLED=false
+      #- LOG_LEVEL=debug
+
+  kibana:
+    build:
+      context: ./kibana
+    # volumes:
+    #    - "./kibana/config/:/etc/kibana/"
+    ports:
+       - "5601:5601"
+    links:
+      - elasticsearch
+
+  scirius:
+    image: stamus/scirius:elk5
+    ports:
+       - "8080:80"
+    volumes:
+      - ./scirius/config:/etc/scirius:ro
+      - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - rules-volume:/etc/suricata/rules:rw
+    links:
+      - elasticsearch
+      - kibana
+      - evebox
+
+  evebox:
+    image: jasonish/evebox:latest
+    ports:
+       - "5636:5636"
+    links:
+      - elasticsearch
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
