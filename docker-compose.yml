@@ -11,16 +11,18 @@ services:
     image: stamus/suricata
     volumes:
       - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
-      - ./suricata/config/ethtool.conf:/etc/supervisor/conf.d/ethtool.conf:ro
+      #- ./suricata/config/ethtool.conf:/etc/supervisor/conf.d/ethtool.conf:ro
       - rules-volume:/etc/suricata/rules:rw
-    # TODO
-    # cap_add:
-    #   - NET_ADMIN
-    #   - NET_RAW
-    # net: host
+      - ./suricata/pcap:/pcap
+      - json-volume:/var/log/suricata
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    # network_mode: "host"
     # TODO set your suricata iface here
-    environment:
-      - SURICATA_ARGS="$capture_option"
+    #environment:
+    #  - SURICATA_ARGS="-r /pcap/log.pcap"
+    command: bash -c "suricata -c /etc/suricata/suricata.yaml -r /pcap/log.pcap"
 
   elasticsearch:
     build:
@@ -79,3 +81,10 @@ services:
       - elasticsearch
     environment:
       ELASTICSEARCH_URL: http://elasticsearch:9200
+
+  eve:
+    image: busybox
+    volumes:
+      - json-volume:/json
+      - ./eve:/eve
+    command: ash -c "cp /json/eve.json /eve/eve.json"
