@@ -16,8 +16,9 @@ Vagrant.configure(2) do |config|
   # system, the virtual machine is going to use it
   if ENV.key?('http_proxy')
     if Vagrant.has_plugin?('vagrant-proxyconf')
+      http_proxy = ENV.fetch('http_proxy') { '' }
       config.proxy.http = ENV['http_proxy']
-      config.proxy.https = ENV.fetch('https_proxy') { ENV['http_proxy'] }
+      config.proxy.https = ENV.fetch('https_proxy') { http_proxy }
       config.proxy.no_proxy = ENV.fetch('no_proxy') { 'localhost,127.0.0.1' }
     else
       print "  WARN: Missing plugin 'vagrant-proxyconf'.\n"
