@@ -2,7 +2,7 @@
 
 Docker based Suricata, Elasticsearch, Logstash, Kibana, Scirius aka SELKS.
 
-Similar to [StamusNetworks/Amsterdam](https://github.com/StamusNetworks/Amsterdam) but without Python.
+[![Join the chat at https://gitter.im/awesome-inc/docker-selks](https://badges.gitter.im/awesome-inc/docker-selks.svg)](https://gitter.im/awesome-inc/docker-selks)
 
 ## Setup
 
