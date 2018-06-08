@@ -1,5 +1,23 @@
 version: '3.4'
 
+# cf.: https://medium.com/@kinghuang/docker-compose-anchors-aliases-extensions-a1e4105d70bd#f191
+#### common partials (needs docker-compose v3.4)
+x-proxy: &proxy
+  http_proxy: ${http_proxy}
+  https_proxy: ${https_proxy}
+  no_proxy: ${no_proxy}
+
+x-base: &base
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "5"
+  # https://docs.docker.com/compose/compose-file/#restart
+  #restart: on-failure # disable restart for development
+  # when deployed using docker swarm, cf.: https://docs.docker.com/compose/compose-file/#restart_policy
+#########
+
 volumes:
   json-volume:    # suricata json input -> logstash
   elastic-volume: # elasticsearch data
@@ -8,20 +26,26 @@ volumes:
 services:
 
   suricata:
-    image: stamus/suricata
+    <<: *base
+    # Reference:
+    # - https://github.com/dtag-dev-sec/tpotce/blob/master/docker/suricata/docker-compose.yml
+    # Good suricata images, cf.:
+    # - https://github.com/dtag-dev-sec/tpotce/blob/master/docker/suricata/Dockerfile
+    # - https://hub.docker.com/r/jasonish/suricata/
+    # - https://github.com/StamusNetworks/suricata-docker/blob/master/Dockerfile
+    image: dtagdevsec/suricata:1804
+    network_mode: "host"
+    cap_add:
+     - NET_ADMIN
+     - SYS_NICE
+     - NET_RAW
+
     volumes:
-      - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      #- ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
       #- ./suricata/config/ethtool.conf:/etc/supervisor/conf.d/ethtool.conf:ro
+      - json-volume:/var/log/suricata
       - rules-volume:/etc/suricata/rules:rw
       - ./suricata/pcap:/pcap
-      - json-volume:/var/log/suricata
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    # network_mode: "host"
-    # TODO set your suricata iface here
-    #environment:
-    #  - SURICATA_ARGS="-r /pcap/log.pcap"
     command: bash -c "suricata -c /etc/suricata/suricata.yaml -r /pcap/log.pcap"
 
   elasticsearch:
