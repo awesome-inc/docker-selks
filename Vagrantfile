@@ -63,8 +63,8 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.provision :docker
-
   config.vm.provision :docker_compose,
+    compose_version: "1.21.0",
     yml: '/vagrant/docker-compose.yml',
     project_name: 'selks',
     run: 'always'

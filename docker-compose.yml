@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 
 volumes:
   json-volume:    # suricata json input -> logstash
@@ -40,7 +40,7 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:5.5.0
-    links:
+    depends_on:
       - elasticsearch
     volumes:
       - ./logstash/conf.d:/usr/share/logstash/pipeline:ro
@@ -57,7 +57,7 @@ services:
     #    - "./kibana/config/:/etc/kibana/"
     ports:
        - "5601:5601"
-    links:
+    depends_on:
       - elasticsearch
 
   scirius:
@@ -68,7 +68,7 @@ services:
       - ./scirius/config:/etc/scirius:ro
       - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
       - rules-volume:/etc/suricata/rules:rw
-    links:
+    depends_on:
       - elasticsearch
       - kibana
       - evebox
@@ -77,7 +77,7 @@ services:
     image: jasonish/evebox:latest
     ports:
        - "5636:5636"
-    links:
+    depends_on:
       - elasticsearch
     environment:
       ELASTICSEARCH_URL: http://elasticsearch:9200
