@@ -95,7 +95,7 @@ services:
     volumes:
       - ./scirius/config:/etc/scirius:ro
       - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
-      - rules-volume:/etc/suricata/rules:rw
+      - rules-data:/etc/suricata/rules:rw
     depends_on:
       - elasticsearch
       - kibana
@@ -115,6 +115,6 @@ services:
     <<: *base
     image: busybox
     volumes:
-      - json-volume:/json
+      - json-data:/json
       - ./eve:/eve
     command: ash -c "cp /json/eve.json /eve/eve.json"
