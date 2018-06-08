@@ -19,9 +19,9 @@ x-base: &base
 #########
 
 volumes:
-  json-volume:    # suricata json input -> logstash
-  elastic-volume: # elasticsearch data
-  rules-volume:   # scirius rules
+  json-data:    # suricata json input -> logstash
+  rules-data:   # scirius rules
+  es-data:      # elasticsearch data
 
 services:
 
@@ -39,52 +39,56 @@ services:
      - NET_ADMIN
      - SYS_NICE
      - NET_RAW
-
     volumes:
       #- ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
       #- ./suricata/config/ethtool.conf:/etc/supervisor/conf.d/ethtool.conf:ro
-      - json-volume:/var/log/suricata
-      - rules-volume:/etc/suricata/rules:rw
+      - json-data:/var/log/suricata
+      - rules-data:/etc/suricata/rules:rw
       - ./suricata/pcap:/pcap
     command: bash -c "suricata -c /etc/suricata/suricata.yaml -r /pcap/log.pcap"
 
   elasticsearch:
-    build:
-      context: ./elasticsearch
+    <<: *base
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.4
+    ports: [ '9200:9200', '9300:9300' ]
+    volumes: [ 'es-data:/usr/share/elasticsearch/data' ]
     environment:
+      # cf.: https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-configuration-methods
       ES_JAVA_OPTS: "-Xms1g -Xmx1g"
-      # single-node, cf.:
-      # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run
-      transport.type: local
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - elastic-volume:/usr/share/elasticsearch/data
+      network.host: 0.0.0.0
+      node.max_local_storage_nodes: 1
+      cluster.name: selks-cluster
+      bootstrap.memory_lock: 'true'
+      discovery.type: single-node
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:5.5.0
+    <<: *base
+    # cf.: https://www.elastic.co/guide/en/logstash/current/docker-config.html
+    image: docker.elastic.co/logstash/logstash-oss:6.2.4
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./logstash/pipeline/:/usr/share/logstash/pipeline/
+      - json-data:/var/log/suricata:ro
+    #hostname: suricata
     depends_on:
       - elasticsearch
-    volumes:
-      - ./logstash/conf.d:/usr/share/logstash/pipeline:ro
-      - json-volume:/var/log/suricata:ro
-    hostname: suricata
     environment:
-      - XPACK_MONITORING_ENABLED=false
-      #- LOG_LEVEL=debug
+      LOG_LEVEL: info
 
   kibana:
-    build:
-      context: ./kibana
-    # volumes:
-    #    - "./kibana/config/:/etc/kibana/"
-    ports:
-       - "5601:5601"
-    depends_on:
-      - elasticsearch
+    <<: *base
+    image: docker.elastic.co/kibana/kibana-oss:6.2.4
+    ports: [ '5601:5601' ]
+    depends_on: [ elasticsearch ]
+    environment:
+      # cf.: https://www.elastic.co/guide/en/kibana/current/_configuring_kibana_on_docker.html
+      SERVER_NAME: kibana.docker.selks
+      ELASTICSEARCH_URL: http://elasticsearch:9200
 
   scirius:
+    <<: *base
     image: stamus/scirius:elk5
     ports:
        - "8080:80"
@@ -98,6 +102,7 @@ services:
       - evebox
 
   evebox:
+    <<: *base
     image: jasonish/evebox:latest
     ports:
        - "5636:5636"
@@ -107,6 +112,7 @@ services:
       ELASTICSEARCH_URL: http://elasticsearch:9200
 
   eve:
+    <<: *base
     image: busybox
     volumes:
       - json-volume:/json
