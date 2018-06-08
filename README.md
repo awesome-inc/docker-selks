@@ -2,8 +2,6 @@
 
 Docker based Suricata, Elasticsearch, Logstash, Kibana, Scirius aka SELKS.
 
-[![Join the chat at https://gitter.im/awesome-inc/docker-selks](https://badges.gitter.im/awesome-inc/docker-selks.svg)](https://gitter.im/awesome-inc/docker-selks)
-
 ## Setup
 
 On Linux
