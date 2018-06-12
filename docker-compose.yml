@@ -42,8 +42,8 @@ services:
     volumes:
       #- ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
       #- ./suricata/config/ethtool.conf:/etc/supervisor/conf.d/ethtool.conf:ro
-      - json-data:/var/log/suricata
-      - rules-data:/etc/suricata/rules:rw
+      - json-data:/var/log/suricata/
+      - rules-data:/etc/suricata/rules/
       - ./suricata/pcap:/pcap
     command: bash -c "suricata -c /etc/suricata/suricata.yaml -r /pcap/log.pcap"
 
@@ -89,7 +89,7 @@ services:
 
   scirius:
     <<: *base
-    image: stamus/scirius:elk5
+    image: stamus/scirius:latest
     ports:
        - "8080:80"
     volumes:
@@ -116,5 +116,3 @@ services:
     image: busybox
     volumes:
       - json-data:/json
-      - ./eve:/eve
-    command: ash -c "cp /json/eve.json /eve/eve.json"
