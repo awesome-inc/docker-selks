@@ -6,8 +6,8 @@
 # https://redmine.openinfosecfoundation.org/projects/suricata/wiki/Suricatayaml
 
 
-# Number of packets preallocated per thread. The default is 1024. A higher number 
-# will make sure each CPU will be more easily kept busy, but may negatively 
+# Number of packets preallocated per thread. The default is 1024. A higher number
+# will make sure each CPU will be more easily kept busy, but may negatively
 # impact caching.
 #
 # If you are using the CUDA pattern matcher (mpm-algo: ac-cuda), different rules
@@ -146,7 +146,7 @@ outputs:
         - tls:
             extended: yes     # enable this for extended logging information
         - files:
-            force-magic: yes   # force logging magic on all logged files
+            force-magic: no   # force logging magic on all logged files
             force-hash: [md5, sha256]     # force logging of md5 checksums
         #- drop:
         #    alerts: no       # log alerts that caused drops
@@ -324,7 +324,7 @@ outputs:
   - file-store:
       enabled: yes      # set to yes to enable
       log-dir: files    # directory to store the files
-      force-magic: yes   # force logging magic on all stored files
+      force-magic: no   # force logging magic on all stored files
       force-md5: yes     # force logging of md5 checksums
       waldo: file.waldo # waldo file to store the file_id across runs
 
@@ -371,8 +371,8 @@ outputs:
       #   - script1.lua
 
 # Magic file. The extension .mgc is added to the value here.
+# Our docker container does not have a magic file, so get rid of all magic tests
 #magic-file: /usr/share/file/magic
-magic-file: /usr/share/file/magic
 
 # When running in NFQ inline mode, it is possible to use a simulated
 # non-terminal NFQUEUE verdict.
@@ -1259,9 +1259,9 @@ app-layer:
       enabled: yes
       detection-ports:
         dp: 502
-      # According to MODBUS Messaging on TCP/IP Implementation Guide V1.0b, it 
-      # is recommended to keep the TCP connection opened with a remote device 
-      # and not to open and close it for each MODBUS/TCP transaction. In that 
+      # According to MODBUS Messaging on TCP/IP Implementation Guide V1.0b, it
+      # is recommended to keep the TCP connection opened with a remote device
+      # and not to open and close it for each MODBUS/TCP transaction. In that
       # case, it is important to set the depth of the stream reassembling as
       # unlimited (stream.reassembly.depth: 0)
     # smb2 detection is disabled internally inside the engine.

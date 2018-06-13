@@ -40,12 +40,16 @@ services:
      - SYS_NICE
      - NET_RAW
     volumes:
-      #- ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
       #- ./suricata/config/ethtool.conf:/etc/supervisor/conf.d/ethtool.conf:ro
       - json-data:/var/log/suricata/
       - rules-data:/etc/suricata/rules/
       - ./suricata/pcap:/pcap
-    command: bash -c "suricata -c /etc/suricata/suricata.yaml -r /pcap/log.pcap"
+    # You will want to put an actual interface for suricata to listen to here if `eth0`
+    # is not to your liking.
+    command: bash -c "suricata -c /etc/suricata/suricata.yaml -i eth0"
+    # To profile a pcap, use
+    # command: bash -c "suricata -c /etc/suricata/suricata.yaml -r /pcap/filename.pcap"
 
   elasticsearch:
     <<: *base
