@@ -22,6 +22,7 @@ volumes:
   json-data:    # suricata json input -> logstash
   rules-data:   # scirius rules
   es-data:      # elasticsearch data
+  pcap-storage: # store pcaps
 
 services:
 
@@ -41,15 +42,18 @@ services:
      - NET_RAW
     volumes:
       - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./suricata/pcap:/pcap
       #- ./suricata/config/ethtool.conf:/etc/supervisor/conf.d/ethtool.conf:ro
       - json-data:/var/log/suricata/
       - rules-data:/etc/suricata/rules/
+      - ./suricata/rules/suricata.rules:/etc/suricata/rules/suricata.rules
       - ./suricata/pcap:/pcap
+      - pcap-storage:/pcap
     # You will want to put an actual interface for suricata to listen to here if `eth0`
     # is not to your liking.
     command: bash -c "suricata -c /etc/suricata/suricata.yaml -i eth0"
     # To profile a pcap, use
-    # command: bash -c "suricata -c /etc/suricata/suricata.yaml -r /pcap/filename.pcap"
+    #command: bash -c "suricata -c /etc/suricata/suricata.yaml -r /pcap/${PCAPNAME}.pcap"
 
   elasticsearch:
     <<: *base
@@ -95,15 +99,12 @@ services:
     <<: *base
     image: stamus/scirius:latest
     ports:
-       - "8080:80"
+       - "8080:8000"
     volumes:
       - ./scirius/config:/etc/scirius:ro
-      - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
       - rules-data:/etc/suricata/rules:rw
-    depends_on:
-      - elasticsearch
-      - kibana
-      - evebox
+    environment:
+      <<: *proxy
 
   evebox:
     <<: *base
@@ -120,3 +121,4 @@ services:
     image: busybox
     volumes:
       - json-data:/json
+      - pcap-storage:/pcap
