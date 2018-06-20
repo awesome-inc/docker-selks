@@ -99,16 +99,16 @@ services:
       SERVER_NAME: kibana.docker.selks
       ELASTICSEARCH_URL: http://elasticsearch:9200
 
-  scirius:
-    <<: *base
-    image: stamus/scirius:latest
-    ports:
-      - "8080:8000"
-    volumes:
-      - ./scirius/config:/etc/scirius:ro
-      - rules-data:/etc/suricata/rules:rw
-    environment:
-      <<: *proxy
+#  scirius:
+#    <<: *base
+#    image: stamus/scirius:latest
+#    ports:
+#      - "8080:8000"
+#    volumes:
+#      - ./scirius/config:/etc/scirius:ro
+#      - rules-data:/etc/suricata/rules:rw
+#    environment:
+#      <<: *proxy
 
   evebox:
     <<: *base
