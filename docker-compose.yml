@@ -25,7 +25,6 @@ volumes:
   pcap-storage: # store pcaps
 
 services:
-
   suricata:
     <<: *base
     # Reference:
@@ -34,7 +33,13 @@ services:
     # - https://github.com/dtag-dev-sec/tpotce/blob/master/docker/suricata/Dockerfile
     # - https://hub.docker.com/r/jasonish/suricata/
     # - https://github.com/StamusNetworks/suricata-docker/blob/master/Dockerfile
-    image: dtagdevsec/suricata:1804
+    image: suricata-selks
+    build:
+      context: ./suricata
+      args:
+        <<: *proxy
+        GIT_COMMIT: ${GIT_COMMIT}
+        BUILD_ID: ${BUILD_ID}
     network_mode: "host"
     cap_add:
      - NET_ADMIN
@@ -43,7 +48,6 @@ services:
     volumes:
       - ./suricata/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
       - ./suricata/pcap:/pcap
-      #- ./suricata/config/ethtool.conf:/etc/supervisor/conf.d/ethtool.conf:ro
       - json-data:/var/log/suricata/
       - rules-data:/etc/suricata/rules/
       - ./suricata/rules/suricata.rules:/etc/suricata/rules/suricata.rules
@@ -99,7 +103,7 @@ services:
     <<: *base
     image: stamus/scirius:latest
     ports:
-       - "8080:8000"
+      - "8080:8000"
     volumes:
       - ./scirius/config:/etc/scirius:ro
       - rules-data:/etc/suricata/rules:rw
@@ -110,7 +114,7 @@ services:
     <<: *base
     image: jasonish/evebox:latest
     ports:
-       - "5636:5636"
+      - "5636:5636"
     depends_on:
       - elasticsearch
     environment:
