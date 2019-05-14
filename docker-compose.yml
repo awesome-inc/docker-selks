@@ -51,7 +51,6 @@ services:
       - json-data:/var/log/suricata/
       - rules-data:/etc/suricata/rules/
       - ./suricata/rules/suricata.rules:/etc/suricata/rules/suricata.rules
-      - ./suricata/pcap:/pcap
       - pcap-storage:/pcap
     # You will want to put an actual interface for suricata to listen to here if `eth0`
     # is not to your liking.
